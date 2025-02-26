@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -e
+
+WEBSITE=www.justplainbill.com
+ID_RSA=/home/bill/.ssh/id_rsa
+CERT_DIR=/etc/letsencrypt/live/${WEBSITE}
+
+# 29 days worth of seconds (29 days * 24 hours * 60 minutes * 60 seconds
+LOTS_OF_SECONDS=$(( 29 * 24*60*60 ))
+
+# Use openssl to check if the published certificate is less than 29 days before expiration
+# if it is, the script will continue and copy the certificate from landfill and update the
+# published certificate on the zulip docker image.
+
+openssl s_client -connect ${WEBSITE}:443 -servername ${WEBSITE} 2>/dev/null |openssl x509 -checkend ${LOTS_OF_SECONDS} >/dev/null 2>&1 && exit 0
+
+zulip-send "Zulip web certificates are about to expire, attempting to update them now."
+
+# This is the command to update the certificates
+ssh landfill "sudo scp -i ${ID_RSA} ${CERT_DIR}/fullchain.pem ${CERT_DIR}/privkey.pem bill@abyss:/home/bill/github/docker-zulip"
+
+# Change to the zulip directory (for crontab runs)
+cd $(dirname $(realpath $0))
+
+# Update the certificates in the docker image
+docker cp fullchain.pem docker-zulip_zulip_1:/data/certs/zulip.combined-chain.crt
+docker cp privkey.pem docker-zulip_zulip_1:/data/certs/zulip.key
+docker-compose exec -T zulip supervisorctl restart nginx
+
+# Cleanup
+rm -f fullchain.pem
+rm -f privkey.pem
+
+zulip-send "Zulip web certificates have been updated."
+exit 0
