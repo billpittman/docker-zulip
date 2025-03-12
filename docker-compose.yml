@@ -91,6 +91,9 @@ services:
       SETTING_EMAIL_USE_TLS: "True"
       ZULIP_AUTH_BACKENDS: "EmailAuthBackend"
 
+      ## RATE LIMITING - turn off rate limiting (this server is invite only)
+      SETTING_RATE_LIMITING: "False" 
+
       ## The following 2 settings enable email to go to a file (the one specified in SETTING_EMAIL_FILE_PATH)
       #  SETTING_EMAIL_BACKEND: "django.core.mail.backends.filebased.EmailBackend"
       #  SETTING_EMAIL_FILE_PATH: "/var/log/zulip/emails"
