@@ -3,7 +3,7 @@
 set -e
 
 WEBSITE=www.justplainbill.com
-CERT_DIR=/etc/letsencrypt/live/${WEBSITE}
+CERT_DIR=/etc/letsencrypt/live/justplainbill.com
 
 # 29 days worth of seconds (29 days * 24 hours * 60 minutes * 60 seconds
 LOTS_OF_SECONDS=$(( 29 * 24*60*60 ))
@@ -17,7 +17,7 @@ openssl s_client -connect ${WEBSITE}:443 -servername ${WEBSITE} 2>/dev/null |ope
 zulip-send "Zulip web certificates are about to expire, attempting to update them now."
 
 # This is the command to update the certificates
-ssh landfill "sudo scp ${CERT_DIR}/fullchain.pem ${CERT_DIR}/privkey.pem bill@abyss:/home/bill/github/docker-zulip"
+ssh junkyard "sudo scp ${CERT_DIR}/fullchain.pem ${CERT_DIR}/privkey.pem bill@abyss:/home/bill/github/docker-zulip"
 
 # Change to the zulip directory (for crontab runs)
 cd $(dirname $(realpath $0))
